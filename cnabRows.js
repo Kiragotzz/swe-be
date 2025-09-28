@@ -103,7 +103,7 @@ function findLinesSync(arr, segmento, empresa) {
       if (!hashSegmentoEmpresa[nomeCompletoEmpresa]) {
         hashSegmentoEmpresa[nomeCompletoEmpresa] = {
           empresa: nomeCompletoEmpresa,
-          linha: i,
+          linha: i+1,
           colunaInicial: NOMEEMPRESAINICIO,
           colunaFinal: NOMEEMPRESAFIM,
           segmento: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i][SEGMENTOIDX],
@@ -119,7 +119,7 @@ function findLinesSync(arr, segmento, empresa) {
       if (!hashSegmentoEmpresa[nomeCompletoEmpresa]) {
         hashSegmentoEmpresa[nomeCompletoEmpresa] = {
           empresa: nomeCompletoEmpresa,
-          linha: i,
+          linha: i+1,
           colunaInicial: NOMEEMPRESAINICIO,
           colunaFinal: NOMEEMPRESAFIM,
           segmento: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i][SEGMENTOIDX],
