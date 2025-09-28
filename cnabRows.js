@@ -16,7 +16,7 @@ const SEGMENTOIDX = 13
 const NOMEEMPRESAINICIO = 33
 const NOMEEMPRESAFIM = 73
 
-//HANDLER
+//HANDLER MAIN
 async function handler(options) {
   const { from, to, segmento, pathFile, empresa } = options
 
@@ -32,26 +32,25 @@ async function handler(options) {
   const cnabTail = cnabArray.slice(-2)
 
   const resFind = findLinesSync(cnabArray, segmento, empresa)
-  console.log("🚀 ~ resFind:", resFind)
+  console.log("EMPRESAS QTD: ", resFind.empresas.length)
+  console.log("LINHAS QTD: ", resFind.lines.length)
 
   console.log(messageLog(resFind.lines, resFind.empresas, segmento.toUpperCase(), from, to, pathFile, __dirname))
   console.timeEnd('leitura Async')
 }
 
-//HELPERS FUNCTIONS
-const sliceArrayPosition = (arr, ...positions) => [...arr].slice(...positions)
-
+//HELPERS
 function checkDirFileSync(path) {
   return new Promise((resolve) => {
     access(path)
       .then(() => {
         console.log(`pathFile exists: ${chalk.bgGreen(true)}`)
-        console.log(`pathFile: ${chalk.bgGreen(pathFile)}`)
+        console.log(`pathFile: ${chalk.bgGreen(path)}`)
         resolve(true)
       })
       .catch(error => {
         console.log(`pathFile does not exists: ${chalk.bgRed(false)}`)
-        console.log(`pathFile: ${chalk.bgRed(pathFile)}`)
+        console.log(`pathFile: ${chalk.bgRed(path)}`)
         resolve(false)
       })
   })
@@ -133,7 +132,6 @@ const messageLog = (segmentos, empresas, segmentoType, from, to, pathFile, __dir
 
   ----- FIM ------
 `
-//${segmento.substring(0, from - 1)}${chalk.inverse.bgBlack(segmento.substring(from - 1, to))}${segmento.substring(to)}
 
 const optionsYargs = yargs(process.argv.slice(2))
   .usage('Uso: $0 [options]')
@@ -146,5 +144,4 @@ const optionsYargs = yargs(process.argv.slice(2))
   .example('$0 -p ./cnabExample.rem', 'defiine o path em que se encontra o Cnab')
   .argv;
 
-const { from, to, segmento, pathFile, empresa } = optionsYargs
 handler(optionsYargs)
