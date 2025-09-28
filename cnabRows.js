@@ -188,8 +188,8 @@ const optionsYargs = yargs(process.argv.slice(2))
   .option("s", { alias: "segmento", describe: "tipo de segmento", type: "string", demandOption: true })
   .option("p", { alias: "pathFile", describe: "define o path do Cnab a ser lido", type: "string" })
   .option("e", { alias: "empresa", describe: "procura os registros pelo nome da empresa", type: "string" })
-  .option("j", { alias: "json", describe: "procura os registros pelo nome da empresa", type: "boolean" })
-  .example('$0 -f 21 -t 34 -s p -e NTT -p F:\Projects', 'lista a linha e campo que from e to do cnab')
+  .option("j", { alias: "json", describe: "criar json com os dados das empresas encontradas", type: "boolean" })
+  .example('$0 -f 21 -t 34 -s p -e NTT -j true -p F:\Projects', 'lista a linha e campo que from e to do cnab')
   .argv;
 
 handler(optionsYargs)
