@@ -1,6 +1,6 @@
 'use strict';
 import path from 'path';
-import { readFile, access } from 'fs/promises';
+import { readFile, access, writeFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 
 import yargs from 'yargs'
@@ -16,9 +16,20 @@ const SEGMENTOIDX = 13
 const NOMEEMPRESAINICIO = 33
 const NOMEEMPRESAFIM = 73
 
+const ENDERECOINICIO = 74
+const ENDERECOFIM = 113
+const BAIRROINICIO = 114
+const BAIRROFIM = 128
+const CEPINICIO = 129
+const CEPFIM = 136
+const CIDADEINICIO = 137
+const CIDADEFIM = 151
+const UFINICIO = 152
+const UFFIM = 153
+
 //HANDLER MAIN
 async function handler(options) {
-  const { from, to, segmento, pathFile, empresa } = options
+  const { from, to, segmento, pathFile, empresa, json } = options
 
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(pathFile ? pathFile + '/cnabExample.rem' : __filename);
@@ -32,10 +43,15 @@ async function handler(options) {
   const cnabTail = cnabArray.slice(-2)
 
   const resFind = findLinesSync(cnabArray, segmento, empresa)
-  console.log("EMPRESAS QTD: ", resFind.empresas.length)
+  console.log("EMPRESAS QTD: ", resFind.empresas)
   console.log("LINHAS QTD: ", resFind.lines.length)
 
   console.log(messageLog(resFind.lines, resFind.empresas, segmento.toUpperCase(), from, to, pathFile, __dirname))
+
+  if (json) {
+    let resWrite = await writeFileSync(resFind.empresas, 'empresas')
+    console.log("WRITE FILE: ", chalk.bgGreen(resWrite))
+  }
   console.timeEnd('leitura Async')
 }
 
@@ -85,12 +101,34 @@ function findLinesSync(arr, segmento, empresa) {
 
     if (!empresa && arr[i][SEGMENTOIDX] === segmento) {//SEGMENTO Q DO QUAL FOI PESQUISADO
       if (!hashSegmentoEmpresa[nomeCompletoEmpresa]) {
-        hashSegmentoEmpresa[nomeCompletoEmpresa] = { empresa: nomeCompletoEmpresa, linha: i, colunaInicial: NOMEEMPRESAINICIO, colunaFinal: NOMEEMPRESAFIM, segmento: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i][SEGMENTOIDX] }
+        hashSegmentoEmpresa[nomeCompletoEmpresa] = {
+          empresa: nomeCompletoEmpresa,
+          linha: i,
+          colunaInicial: NOMEEMPRESAINICIO,
+          colunaFinal: NOMEEMPRESAFIM,
+          segmento: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i][SEGMENTOIDX],
+          ENDERECO: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i].slice(ENDERECOINICIO ,ENDERECOFIM),
+          BAIRRO: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i].slice(BAIRROINICIO, BAIRROFIM),
+          CEP: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i].slice(CEPINICIO, CEPFIM),
+          CIDADE: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i].slice(CIDADEINICIO, CIDADEFIM),
+          UF: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i].slice(UFINICIO, UFFIM),
+        }
       }
       lines.push(arr[i])
     } else if (empresa && arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i].slice(NOMEEMPRESAINICIO, NOMEEMPRESAFIM).includes(empresa)) {
       if (!hashSegmentoEmpresa[nomeCompletoEmpresa]) {
-        hashSegmentoEmpresa[nomeCompletoEmpresa] = { empresa: nomeCompletoEmpresa, linha: i, colunaInicial: NOMEEMPRESAINICIO, colunaFinal: NOMEEMPRESAFIM, segmento: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i][SEGMENTOIDX] }
+        hashSegmentoEmpresa[nomeCompletoEmpresa] = {
+          empresa: nomeCompletoEmpresa,
+          linha: i,
+          colunaInicial: NOMEEMPRESAINICIO,
+          colunaFinal: NOMEEMPRESAFIM,
+          segmento: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i][SEGMENTOIDX],
+          ENDERECO: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i].slice(ENDERECOINICIO ,ENDERECOFIM),
+          BAIRRO: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i].slice(BAIRROINICIO, BAIRROFIM),
+          CEP: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i].slice(CEPINICIO, CEPFIM),
+          CIDADE: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i].slice(CIDADEINICIO, CIDADEFIM),
+          UF: arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i].slice(UFINICIO, UFFIM),
+        }
       }
       lines.push(arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i - (1)])//P
       lines.push(arr[mapIdxSegmentosEmpresa[arr[i][SEGMENTOIDX]] + i])//Q
@@ -117,31 +155,41 @@ const messageLog = (segmentos, empresas, segmentoType, from, to, pathFile, __dir
   posição to: ${chalk.inverse.bgBlack(to)}
 
   Empresas encontradas no CNAB:
-   ${
-      empresas.map(e=>e.empresa).join('\n   ')
-    }
+   ${empresas.map(e => e.empresa).join('\n   ')
+  }
 
   Linhas encontradas no CNAB: 
-    ${
-      segmentos.map(segmento=>
-        `
+    ${segmentos.map(segmento =>
+    `
           ${segmento.substring(0, from - 1)}${chalk.inverse.bgBlack(segmento.substring(from - 1, to))}${segmento.substring(to)}
         `
-        ).join('\n   ')
-      }
+  ).join('\n   ')
+  }
 
   ----- FIM ------
 `
+
+function writeFileSync(jsonToWrite, nameFile) {
+  return new Promise((resolve) => {
+    writeFile(nameFile + '.json', JSON.stringify(jsonToWrite))
+      .then(resWrite => {
+        resolve(true)
+      })
+      .catch(error => {
+        resolve(error)
+      })
+  })
+}
 
 const optionsYargs = yargs(process.argv.slice(2))
   .usage('Uso: $0 [options]')
   .option("f", { alias: "from", describe: "posição inicial de pesquisa da linha do Cnab", type: "number", demandOption: true })
   .option("t", { alias: "to", describe: "posição final de pesquisa da linha do Cnab", type: "number", demandOption: true })
   .option("s", { alias: "segmento", describe: "tipo de segmento", type: "string", demandOption: true })
-  .example('$0 -f 21 -t 34 -s p', 'lista a linha e campo que from e to do cnab')
   .option("p", { alias: "pathFile", describe: "define o path do Cnab a ser lido", type: "string" })
   .option("e", { alias: "empresa", describe: "procura os registros pelo nome da empresa", type: "string" })
-  .example('$0 -p ./cnabExample.rem', 'defiine o path em que se encontra o Cnab')
+  .option("j", { alias: "json", describe: "procura os registros pelo nome da empresa", type: "boolean" })
+  .example('$0 -f 21 -t 34 -s p -e NTT -p F:\Projects', 'lista a linha e campo que from e to do cnab')
   .argv;
 
 handler(optionsYargs)
